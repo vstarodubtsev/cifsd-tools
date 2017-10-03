@@ -1071,7 +1071,7 @@ int init_cifsd_idmap(void)
 	if (!cred)
 		return -ENOMEM;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 37)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0)
 	keyring = keyring_alloc(".cifs_idmap",
 			GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, cred,
 			(KEY_POS_ALL & ~KEY_POS_SETATTR) |
