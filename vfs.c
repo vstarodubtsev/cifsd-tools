@@ -510,8 +510,10 @@ int smb_vfs_getattr(struct cifsd_sess *sess, uint64_t fid,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 	err = vfs_getattr(&filp->f_path, stat, STATX_BASIC_STATS,
 		AT_STATX_SYNC_AS_STAT);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	err = vfs_getattr(&filp->f_path, stat);
+#else
+	err = vfs_getattr(filp->f_path.mnt, filp->f_path.dentry, stat);
 #endif
 	if (err)
 		cifsd_err("getattr failed for fid %llu, err %d\n", fid, err);

@@ -57,6 +57,7 @@
 #include "fh.h"
 #include <crypto/hash.h>
 #include "smberr.h"
+#include "compat.h"
 
 extern struct kmem_cache *cifsd_work_cache;
 extern struct kmem_cache *cifsd_filp_cache;

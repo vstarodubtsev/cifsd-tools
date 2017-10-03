@@ -150,9 +150,10 @@ static bool __add_share(struct cifsd_share *share, char *sharename,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 			err = vfs_getattr(&share_path, &stat, STATX_BASIC_STATS,
 				AT_STATX_SYNC_AS_STAT);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 			err = vfs_getattr(&share_path, &stat);
-
+#else
+			err = vfs_getattr(share_path.mnt, share_path.dentry, &stat);
 #endif
 			path_put(&share_path);
 			if (err) {

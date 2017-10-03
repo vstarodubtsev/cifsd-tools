@@ -1769,8 +1769,10 @@ int smb_nt_create_andx(struct smb_work *smb_work)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 		err = vfs_getattr(&path, &stat, STATX_BASIC_STATS,
 			AT_STATX_SYNC_AS_STAT);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 		err = vfs_getattr(&path, &stat);
+#else
+		err = vfs_getattr(path.mnt, path.dentry, &stat);
 #endif
 		if (err) {
 			cifsd_err("can not stat %s, err = %d\n",
@@ -1933,8 +1935,10 @@ int smb_nt_create_andx(struct smb_work *smb_work)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 	err = vfs_getattr(&path, &stat, STATX_BASIC_STATS,
 		AT_STATX_SYNC_AS_STAT);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	err = vfs_getattr(&path, &stat);
+#else
+	err = vfs_getattr(path.mnt, path.dentry, &stat);
 #endif
 	if (err) {
 		cifsd_err("cannot get stat information\n");
@@ -3422,8 +3426,10 @@ int query_path_info(struct smb_work *smb_work)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 	rc = vfs_getattr(&path, &st, STATX_BASIC_STATS, AT_STATX_SYNC_AS_STAT);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	rc = vfs_getattr(&path, &st);
+#else
+	rc = vfs_getattr(path.mnt, path.dentry, &st);
 #endif
 	if (rc) {
 		cifsd_err("cannot get stat information\n");
@@ -4263,8 +4269,10 @@ int smb_posix_open(struct smb_work *smb_work)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 		err = vfs_getattr(&path, &stat, STATX_BASIC_STATS,
 			AT_STATX_SYNC_AS_STAT);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 		err = vfs_getattr(&path, &stat);
+#else
+		err = vfs_getattr(path.mnt, path.dentry, &stat);
 #endif
 		if (err) {
 			cifsd_err("can not stat %s, err = %d\n", name, err);
@@ -4377,8 +4385,10 @@ prepare_rsp:
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 	err = vfs_getattr(&path, &stat, STATX_BASIC_STATS,
 		AT_STATX_SYNC_AS_STAT);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	err = vfs_getattr(&path, &stat);
+#else
+	err = vfs_getattr(path.mnt, path.dentry, &stat);
 #endif
 	if (err) {
 		cifsd_err("cannot get stat information\n");

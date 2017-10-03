@@ -1029,8 +1029,12 @@ int smb_dentry_open(struct smb_work *work, const struct path *path,
 		if (err)
 			goto err_out;
 	}
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	filp = dentry_open(path, flags | O_LARGEFILE, current_cred());
+#else
+	filp = dentry_open(path->dentry, path->mnt, flags | O_LARGEFILE,
+		current_cred());
+#endif
 	if (IS_ERR(filp)) {
 		err = PTR_ERR(filp);
 		cifsd_err("dentry open failed, err %d\n", err);
@@ -1170,8 +1174,11 @@ int smb_search_dir(char *dirname, char *filename)
 	ret = smb_kern_path(dirname, 0, &dir_path, true);
 	if (ret)
 		goto out;
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	dfilp = dentry_open(&dir_path, flags, current_cred());
+#else
+	dfilp = dentry_open(dir_path.dentry, dir_path.mnt, flags, current_cred());
+#endif
 	if (IS_ERR(dfilp)) {
 		cifsd_err("cannot open directory %s\n", dirname);
 		ret = -EINVAL;
@@ -1313,8 +1320,13 @@ struct cifsd_mfile *mfp_lookup(struct inode *inode)
 		mfp_hash(inode->i_sb, inode->i_ino);
 	struct cifsd_mfile *mfp = NULL, *ret_mfp = NULL;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,0)
+	struct hlist_node *pos;
+#endif
+
+
 	spin_lock(&mfp_hash_lock);
-	hlist_for_each_entry(mfp, head, m_hash) {
+	compat_hlist_for_each_entry(mfp, pos, head, m_hash) {
 		if (mfp->m_inode == inode) {
 			atomic_inc(&mfp->m_count);
 			ret_mfp = mfp;
