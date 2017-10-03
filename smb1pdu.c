@@ -2731,8 +2731,13 @@ static void init_unix_info(FILE_UNIX_BASIC_INFO *unix_info, struct kstat *stat)
 			cpu_to_le64(cifs_UnixTimeToNT(stat->atime));
 	unix_info->LastModificationTime =
 			cpu_to_le64(cifs_UnixTimeToNT(stat->mtime));
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	unix_info->Uid = cpu_to_le64(from_kuid(&init_user_ns, stat->uid));
 	unix_info->Gid = cpu_to_le64(from_kgid(&init_user_ns, stat->gid));
+#else
+	unix_info->Uid = cpu_to_le64(stat->uid);
+	unix_info->Gid = cpu_to_le64(stat->gid);
+#endif
 	unix_info->Type = cpu_to_le32(get_filetype(stat->mode));
 	unix_info->DevMajor = cpu_to_le64(MAJOR(stat->rdev));
 	unix_info->DevMinor = cpu_to_le64(MINOR(stat->rdev));

@@ -30,6 +30,7 @@
 #include <net/addrconf.h>
 #include <linux/syscalls.h>
 #include <linux/inotify.h>
+#include <linux/if_arp.h>
 
 bool multi_channel_enable;
 
@@ -2279,7 +2280,12 @@ int smb2_open(struct smb_work *smb_work)
 
 	}
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	filp = dentry_open(&path, open_flags | O_LARGEFILE, current_cred());
+#else
+	filp = dentry_open(path.dentry, path.mnt, open_flags | O_LARGEFILE,
+		current_cred());
+#endif
 	if (IS_ERR(filp)) {
 		rc = PTR_ERR(filp);
 		cifsd_err("dentry open for dir failed, rc %d\n", rc);
@@ -2311,8 +2317,14 @@ int smb2_open(struct smb_work *smb_work)
 			kfree(pathname);
 			goto err_out;
 		}
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 		lfilp = dentry_open(&lpath, open_flags
 				| O_LARGEFILE, current_cred());
+#else
+		lfilp = dentry_open(lpath.dentry, lpath.mnt, open_flags
+				| O_LARGEFILE, current_cred());
+#endif
 		if (IS_ERR(lfilp)) {
 			rc = PTR_ERR(lfilp);
 			cifsd_err("dentry open for (%s) failed, rc %d\n",
@@ -5920,7 +5932,7 @@ struct file_lock *smb_flock_init(struct file *f)
 
 	locks_init_lock(fl);
 
-	fl->fl_owner = f;
+	fl->fl_owner = (fl_owner_t)f;
 	fl->fl_pid = current->tgid;
 	fl->fl_file = f;
 	fl->fl_flags = FL_POSIX;
@@ -6252,7 +6264,11 @@ wait:
 				async = smb_work->async;
 				if (async->async_status == ASYNC_CANCEL ||
 					async->async_status == ASYNC_CLOSE) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 11, 0)
 					posix_unblock_lock(flock);
+#else
+					posix_unblock_lock(filp, flock);
+#endif
 					list_del(&smb_lock->llist);
 					list_del(&smb_lock->glist);
 					locks_free_lock(flock);

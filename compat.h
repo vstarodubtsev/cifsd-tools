@@ -1,6 +1,8 @@
 #ifndef __CIFSD_COMPAT_H
 #define __CIFSD_COMPAT_H
 
+#include <linux/mount.h>
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
 typedef struct {
 	uid_t val;
@@ -19,6 +21,39 @@ static inline gid_t __kgid_val(kgid_t gid)
 {
 	return gid.val;
 }
+
+static inline uid_t from_kuid(struct user_namespace *to, kuid_t kuid)
+{
+	return __kuid_val(kuid);
+}
+
+static inline gid_t from_kgid(struct user_namespace *to, kgid_t kgid)
+{
+	return __kgid_val(kgid);
+}
+
+static inline void i_uid_write(struct inode *inode, uid_t uid)
+{
+	inode->i_uid = uid;
+}
+
+static inline void i_gid_write(struct inode *inode, gid_t gid)
+{
+	inode->i_gid = gid;
+}
+
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+
+static inline void done_path_create(struct path *path, struct dentry *dentry)
+{
+	dput(dentry);
+	mutex_unlock(&path->dentry->d_inode->i_mutex);
+	mnt_drop_write(path->mnt);
+	path_put(path);
+}
+
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,15,0)

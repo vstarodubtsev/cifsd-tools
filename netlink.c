@@ -266,9 +266,10 @@ static int cifsd_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh)
 
 static void cifsd_netlink_rcv(struct sk_buff *skb)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 45)
 	if (!netlink_capable(skb, CAP_NET_ADMIN))
 		return;
-
+#endif
 	mutex_lock(&nlsk_mutex);
 	while (skb->len >= NLMSG_HDRLEN) {
 		int err;
@@ -295,11 +296,16 @@ static void cifsd_netlink_rcv(struct sk_buff *skb)
 
 int cifsd_net_init(void)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
 	struct netlink_kernel_cfg cfg = {
 		.input  = cifsd_netlink_rcv,
 	};
 
 	cifsd_nlsk = netlink_kernel_create(&init_net, NETLINK_CIFSD, &cfg);
+#else
+	cifsd_nlsk = netlink_kernel_create(&init_net, NETLINK_FIB_LOOKUP, 0,
+				   cifsd_netlink_rcv, NULL, THIS_MODULE);
+#endif
 	if (unlikely(!cifsd_nlsk)) {
 		cifsd_err("failed to create cifsd netlink socket\n");
 		return -ENOMEM;

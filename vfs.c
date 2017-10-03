@@ -57,7 +57,11 @@ int smb_vfs_create(const char *name, umode_t mode)
 	}
 
 	mode |= S_IFREG;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
 	err = vfs_create(path.dentry->d_inode, dentry, mode, true);
+#else
+	err = vfs_create(path.dentry->d_inode, dentry, mode, NULL);
+#endif
 	if (err)
 		cifsd_err("File(%s): creation failed (err:%d)\n", name, err);
 
@@ -372,9 +376,17 @@ void smb_check_attrs(struct inode *inode, struct iattr *attrs)
 	/* Revoke setuid/setgid on chown */
 	if (!S_ISDIR(inode->i_mode) &&
 		(((attrs->ia_valid & ATTR_UID) &&
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 10, 30)
 				!uid_eq(attrs->ia_uid, inode->i_uid)) ||
+#else
+				(attrs->ia_uid != inode->i_uid)) ||
+#endif
 		 ((attrs->ia_valid & ATTR_GID) &&
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 10, 30)
 				!gid_eq(attrs->ia_gid, inode->i_gid)))) {
+#else
+				(attrs->ia_gid != inode->i_gid)))) {
+#endif
 		attrs->ia_valid |= ATTR_KILL_PRIV;
 		if (attrs->ia_valid & ATTR_MODE) {
 			/* we're setting mode too, just clear the s*id bits */

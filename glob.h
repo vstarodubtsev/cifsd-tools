@@ -51,8 +51,14 @@
 #if LINUX_VERSION_CODE > KERNEL_VERSION(3, 10, 30)
 #include <linux/vmalloc.h>
 #include <uapi/linux/xattr.h>
+#else
+#include <linux/xattr.h>
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0)
 #include <linux/hashtable.h>
+#else
+#include "hashtable.h"
+#endif
 #include "unicode.h"
 #include "fh.h"
 #include <crypto/hash.h>

@@ -21,6 +21,7 @@
  *   along with this library; if not, write to the Free Software
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
+#include <linux/errno.h>
 #include <linux/keyctl.h>
 #include <linux/key-type.h>
 #include <keys/user-type.h>
@@ -1077,11 +1078,15 @@ int init_cifsd_idmap(void)
 			(KEY_POS_ALL & ~KEY_POS_SETATTR) |
 			KEY_USR_VIEW | KEY_USR_READ,
 			KEY_ALLOC_NOT_IN_QUOTA, NULL, NULL);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	keyring = keyring_alloc(".cifs_idmap",
 			GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, cred,
 			(KEY_POS_ALL & ~KEY_POS_SETATTR) |
 			KEY_USR_VIEW | KEY_USR_READ,
+			KEY_ALLOC_NOT_IN_QUOTA, NULL);
+#else
+	keyring = keyring_alloc(".cifs_idmap",
+			0, 0, cred,
 			KEY_ALLOC_NOT_IN_QUOTA, NULL);
 #endif
 	if (IS_ERR(keyring)) {
