@@ -746,8 +746,14 @@ void cifsd_fattr_to_inode(struct inode *inode, struct cifsd_fattr *fattr)
 {
 
 	spin_lock(&inode->i_lock);
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	inode->i_uid = fattr->cf_uid;
 	inode->i_gid = fattr->cf_gid;
+#else
+	inode->i_uid = __kuid_val(fattr->cf_uid);
+	inode->i_gid = __kgid_val(fattr->cf_gid);
+#endif
 
 	inode->i_mode = fattr->cf_mode;
 
@@ -972,7 +978,11 @@ int build_sec_desc(struct cifs_ntsd *pntsd, int addition_info,
 	if (addition_info & OWNER_SECINFO) {
 		kuid_t uid;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 		uid = inode->i_uid;
+#else
+		uid = KUIDT_INIT(inode->i_uid);
+#endif
 		if (uid_valid(uid)) {
 			uid_t id;
 
@@ -1002,7 +1012,12 @@ int build_sec_desc(struct cifs_ntsd *pntsd, int addition_info,
 	if (addition_info & GROUP_SECINFO) {
 		kgid_t gid;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 		gid = inode->i_gid;
+#else
+		gid = KGIDT_INIT(inode->i_gid);
+#endif
+
 		if (gid_valid(gid)) { /* chgrp */
 			gid_t id;
 
