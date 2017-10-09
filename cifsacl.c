@@ -71,6 +71,7 @@ static const struct cifs_sid sid_unix_NFS_mode = { 1, 2, {0, 0, 0, 0, 0, 5},
 
 static const struct cred *root_cred;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0)
 static int
 cifs_idmap_key_instantiate(struct key *key, struct key_preparsed_payload *prep)
 {
@@ -107,6 +108,22 @@ cifs_idmap_key_instantiate(struct key *key, struct key_preparsed_payload *prep)
 	key->datalen = prep->datalen;
 	return 0;
 }
+#else
+static int
+cifs_idmap_key_instantiate(struct key *key, const void *data, size_t datalen)
+{
+	char *payload;
+
+	payload = kmalloc(datalen, GFP_KERNEL);
+	if (!payload)
+		return -ENOMEM;
+
+	memcpy(payload, data, datalen);
+	key->payload.data = payload;
+	key->datalen = datalen;
+	return 0;
+}
+#endif
 
 static inline void
 cifs_idmap_key_destroy(struct key *key)

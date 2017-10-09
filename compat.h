@@ -92,6 +92,7 @@ static inline void done_path_create(struct path *path, struct dentry *dentry)
 
 #endif
 
+#if 0
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,15,0)
 static inline void kvfree(const void *addr)
 {
@@ -100,6 +101,7 @@ static inline void kvfree(const void *addr)
 	else
 		kfree(addr);
 }
+#endif
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,0)
@@ -114,6 +116,10 @@ static inline struct inode *file_inode(const struct file *f)
 #define compat_hlist_for_each_entry(a,pos,c,d)	hlist_for_each_entry(a,c,d)
 #define compat_hlist_for_each_entry_safe(a,pos,c,d,e)	hlist_for_each_entry_safe(a,c,d,e)
 #define compat_hlist_for_each_entry_rcu(a,pos,c,d)	hlist_for_each_entry_rcu(a,c,d)
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+static inline void key_invalidate(struct key *key){};
 #endif
 
 #endif /* __CIFSD_COMPAT_H */

@@ -1237,9 +1237,11 @@ int smb_vfs_lock(struct file *filp, int cmd,
 int check_lock_range(struct file *filp, loff_t start, loff_t end,
 		unsigned char type)
 {
+	int error = 0;
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 10, 30)
 	struct file_lock *flock;
 	struct file_lock_context *ctx = file_inode(filp)->i_flctx;
-	int error = 0;
 
 	if (!ctx || list_empty_careful(&ctx->flc_posix))
 		return 0;
@@ -1264,6 +1266,24 @@ int check_lock_range(struct file *filp, loff_t start, loff_t end,
 		}
 	}
 out:
+#else
+	struct file_lock fl;
+
+	if (!file_inode(filp)->i_flock)
+		return 0;
+
+	locks_init_lock(&fl);
+	fl.fl_owner = (struct files_struct *)filp;
+	fl.fl_pid = current->tgid;
+	fl.fl_file = filp;
+	fl.fl_flags = FL_POSIX | FL_ACCESS;
+	fl.fl_type = type;
+	fl.fl_start = start;
+	fl.fl_end = end;
+	error = posix_lock_file(filp, &fl, NULL);
+	locks_delete_block(&fl);
+#endif
+
 	return error;
 }
 
