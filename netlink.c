@@ -303,7 +303,7 @@ int cifsd_net_init(void)
 
 	cifsd_nlsk = netlink_kernel_create(&init_net, NETLINK_CIFSD, &cfg);
 #else
-	cifsd_nlsk = netlink_kernel_create(&init_net, NETLINK_FIB_LOOKUP, 0,
+	cifsd_nlsk = netlink_kernel_create(&init_net, NETLINK_CIFSD, 0,
 				   cifsd_netlink_rcv, NULL, THIS_MODULE);
 #endif
 	if (unlikely(!cifsd_nlsk)) {
